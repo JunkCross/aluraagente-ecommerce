@@ -1,6 +1,5 @@
 # 🛍️ LunaShop Agente — Agente de IA para Soporte de E-commerce
 
-Proyecto final del reto **Alura Agente** (programa ONE — Oracle Next Education).
 Agente de inteligencia artificial que responde preguntas de colaboradores sobre
 las políticas y documentos internos de **LunaShop**, una tienda de e-commerce
 ficticia, usando RAG (Retrieval-Augmented Generation).
@@ -113,8 +112,7 @@ deploy secundario/opcional.
 
 ## 📄 Formatos soportados y documentos incluidos
 
-El pipeline de ingesta (`src/ingest.py`) soporta los **7 formatos requeridos
-por el reto**:
+El pipeline de ingesta (`src/ingest.py`) soporta **7 formatos** de documento:
 
 | Formato | Extensión | Librería usada | Estado |
 |---|---|---|---|
@@ -182,7 +180,7 @@ Se calcula en `LunaShopAgent.get_status()` y se actualiza solo.
 
 ## 🚀 Cómo ejecutar el proyecto localmente
 
-**1. Clona el repositorio e instala dependencias**
+**1. Clonar el repositorio e instalar dependencias**
 
 ```bash
 git clone https://github.com/TU_USUARIO/aluraagente-ecommerce.git
@@ -194,7 +192,7 @@ pip install -r requirements.txt
 
 > El proyecto está fijado a **Python 3.10** (ver `.python-version`).
 
-**2. Configura las variables de entorno**
+**2. Configurar las variables de entorno**
 
 ```bash
 cp .env.example .env
@@ -205,23 +203,24 @@ recupera los fragmentos relevantes y arma una respuesta extractiva sin
 necesitar ninguna API key. `STORAGE_BACKEND=local` guarda los documentos en
 la carpeta `documents/` del propio repo.
 
-**3. Corre la app**
+**3. Ejecutar la app**
 
 ```bash
 streamlit run app.py
 ```
 
-Abre `http://localhost:8501`. La primera vez, la app construye el índice
-vectorial automáticamente (puede tardar uno o dos minutos).
+Por defecto se abre en `http://localhost:8501`. La primera vez, la app
+construye el índice vectorial automáticamente (puede tardar uno o dos
+minutos).
 
 ## ☁️ Despliegue en Streamlit Community Cloud
 
-1. Sube el repositorio a GitHub (público, como pide el reto).
-2. Entra a [share.streamlit.io](https://share.streamlit.io) e inicia sesión con tu cuenta de GitHub.
-3. Clic en **"New app"** → selecciona el repositorio, la rama `main` y el archivo principal `app.py`.
-4. En **"Advanced settings" → "Secrets"**, pega tus credenciales de LLM y
+1. El repositorio debe estar en GitHub (público o privado con acceso concedido a Streamlit Cloud).
+2. Entrar a [share.streamlit.io](https://share.streamlit.io) e iniciar sesión con una cuenta de GitHub.
+3. Clic en **"New app"** → seleccionar el repositorio, la rama `main` y el archivo principal `app.py`.
+4. En **"Advanced settings" → "Secrets"**, agregar las credenciales de LLM y
    de OCI Object Storage (ver la sección [Almacenamiento de documentos](#-almacenamiento-de-documentos-local-o-oci-object-storage)
-   para el bloque completo de `Secrets` con OCI). Como mínimo necesitas:
+   para el bloque completo de `Secrets` con OCI). Como mínimo se necesita:
    ```toml
    LLM_PROVIDER = "cohere"
    COHERE_API_KEY = "tu_api_key_aqui"
@@ -229,53 +228,49 @@ vectorial automáticamente (puede tardar uno o dos minutos).
 
    STORAGE_BACKEND = "local"
    ```
-   Si usas `STORAGE_BACKEND = "oci"` (el backend activo en este proyecto),
-   agrega también `OCI_BUCKET_NAME`, `OCI_NAMESPACE`, `OCI_TENANCY_OCID`,
+   Si se usa `STORAGE_BACKEND = "oci"` (el backend activo en este proyecto),
+   agregar también `OCI_BUCKET_NAME`, `OCI_NAMESPACE`, `OCI_TENANCY_OCID`,
    `OCI_USER_OCID`, `OCI_FINGERPRINT`, `OCI_REGION` y `OCI_PRIVATE_KEY_CONTENT`.
 5. Clic en **"Deploy"**. Streamlit Cloud instala `requirements.txt` y
    levanta `app.py` automáticamente. Cada `git push` a `main` re-despliega
    la app sola.
-6. Copia la URL pública (algo como `https://tu-usuario-aluraagente-ecommerce.streamlit.app`)
-   y agrégala aquí como evidencia del deploy, junto con una captura de pantalla.
 
 > **No se necesita Dockerfile para este camino de deploy** — Streamlit
 > Cloud construye el entorno directamente desde `requirements.txt`.
 
 ## 🗄️ Almacenamiento de documentos: local o OCI Object Storage
 
-Con `STORAGE_BACKEND=local` (el valor por defecto) no necesitas configurar
-nada más: los documentos viven en la carpeta `documents/` del repo. La
-única limitación es que los archivos que subas *desde la interfaz* durante
-el uso de la app no sobrevivirán a un redeploy en Streamlit Cloud, porque
-su sistema de archivos es efímero. Para la mayoría de las entregas del reto
-esto es suficiente.
+Con `STORAGE_BACKEND=local` (el valor por defecto en `.env.example`) no se
+necesita configurar nada más: los documentos viven en la carpeta
+`documents/` del repo. La limitación es que los archivos que se suban
+*desde la interfaz* durante el uso de la app no sobreviven a un redeploy en
+Streamlit Cloud, porque su sistema de archivos es efímero.
 
-Si quieres que las subidas persistan entre redeploys — y de paso cumplir el
-uso de un servicio de OCI — usa `STORAGE_BACKEND=oci` con **OCI Object
-Storage** (capa Always Free: 20 GB de almacenamiento, 50,000
-solicitudes/mes). El bucket se crea **a mano desde la consola**, sin
-Terraform:
+Para que las subidas persistan entre redeploys, este proyecto usa
+`STORAGE_BACKEND=oci` con **OCI Object Storage** (capa Always Free: 20 GB
+de almacenamiento, 50,000 solicitudes/mes). El bucket se crea **a mano
+desde la consola**, sin Terraform:
 
 ### Crear el bucket (consola de OCI, sin Terraform)
 
-1. Entra a la consola de OCI → menú ☰ → **Storage → Buckets**.
-2. Selecciona el compartment donde quieras crearlo y clic en **"Create Bucket"**.
-3. Nombra el bucket, por ejemplo `lunashop-documentos`. Deja "Default Storage Tier" en `Standard` y visibilidad `Private`.
+1. Entrar a la consola de OCI → menú ☰ → **Storage → Buckets**.
+2. Seleccionar el compartment donde crearlo y clic en **"Create Bucket"**.
+3. Nombrar el bucket, por ejemplo `lunashop-documentos`. Dejar "Default Storage Tier" en `Standard` y visibilidad `Private`.
 4. Clic en **"Create"**.
-5. En la misma página de Buckets, copia el **namespace** que aparece arriba a la derecha (algo como `axabc1d2e3f4`) — lo necesitarás como `OCI_NAMESPACE`.
+5. En la misma página de Buckets, copiar el **namespace** que aparece arriba a la derecha (algo como `axabc1d2e3f4`) — se necesita como `OCI_NAMESPACE`.
 
 ### Crear la API key (credenciales)
 
-1. En la consola, clic en tu ícono de perfil (arriba a la derecha) → **"User settings"**.
-2. En la pestaña **"API keys"**, clic en **"Add API key"** → **"Generate API Key Pair"** → descarga la llave privada.
-3. OCI te muestra un bloque de configuración con `tenancy`, `user`, `fingerprint` y `region` — guárdalo, lo necesitas para el siguiente paso.
+1. En la consola, clic en el ícono de perfil (arriba a la derecha) → **"User settings"**.
+2. En la pestaña **"API keys"**, clic en **"Add API key"** → **"Generate API Key Pair"** → descargar la llave privada.
+3. OCI muestra un bloque de configuración con `tenancy`, `user`, `fingerprint` y `region`, necesario para el siguiente paso.
 
 ### Configurar el proyecto
 
-**Opción A — con archivo `~/.oci/config` (más simple si corres localmente):**
-Pega el bloque de configuración que copiaste en `~/.oci/config` y guarda la
+**Opción A — con archivo `~/.oci/config` (más simple para correr localmente):**
+Pegar el bloque de configuración copiado en `~/.oci/config` y guardar la
 llave privada descargada en la ruta que ese bloque indique (por ejemplo
-`~/.oci/oci_api_key.pem`). Luego en tu `.env`:
+`~/.oci/oci_api_key.pem`). Luego en el `.env` local:
 
 ```
 STORAGE_BACKEND=oci
@@ -323,10 +318,9 @@ en formato TOML, necesario porque la llave privada ocupa varias líneas.
 
 ## 📦 Migración de documentos existentes a OCI
 
-Si ya tienes documentos en `documents/` (el caso típico al pasar de
-`STORAGE_BACKEND=local` a `oci` por primera vez), usa el script incluido
-`migrate_documents_to_oci.py` para subirlos todos al bucket de una sola
-vez:
+Si ya existen documentos en `documents/` (el caso típico al pasar de
+`STORAGE_BACKEND=local` a `oci` por primera vez), el script incluido
+`migrate_documents_to_oci.py` los sube todos al bucket de una sola vez:
 
 ```bash
 python migrate_documents_to_oci.py
@@ -365,7 +359,8 @@ No es necesario para el deploy principal.
 
 **`NotFoundError: model 'command-r' was removed on September 15, 2025`**
 Cohere retiró el modelo `command-r`. El proyecto usa por defecto
-`command-a-03-2025`. Si tienes una copia previa, define en tu `.env`:
+`command-a-03-2025`. En instalaciones previas a ese cambio, hay que
+definir en `.env`:
 ```
 COHERE_MODEL=command-a-03-2025
 ```
@@ -375,9 +370,9 @@ Es esperado: Streamlit Cloud tiene sistema de archivos efímero, así que el
 índice de ChromaDB se reconstruye desde cero en cada arranque. Con los 13
 documentos de ejemplo tarda menos de un minuto.
 
-**Subí un documento pero el agente no lo usa**
-Revisa el cuadrito "Base de datos vectorial": debe mostrar más fragmentos
-que antes. Si no cambió, revisa los logs de la app en Streamlit Cloud
+**Se sube un documento pero el agente no lo usa**
+Revisar el cuadrito "Base de datos vectorial": debe mostrar más fragmentos
+que antes. Si no cambió, revisar los logs de la app en Streamlit Cloud
 ("Manage app" → "Logs") para ver si la extracción del archivo falló.
 
 **`NotImplementedError: Cannot copy out of meta tensor` al construir el índice**
@@ -424,10 +419,10 @@ de pantalla de la interfaz y un video corto de demostración.
 
 ### Capturas de pantalla
 
-1. Crea una carpeta `docs/` en la raíz del repo si no existe.
-2. Guarda ahí tus capturas (por ejemplo `docs/screenshot-chat.png`,
+1. Crear una carpeta `docs/` en la raíz del repo si no existe.
+2. Guardar ahí las capturas (por ejemplo `docs/screenshot-chat.png`,
    `docs/screenshot-documentos.png`).
-3. Insértalas en el README con sintaxis Markdown estándar:
+3. Insertarlas en el README con sintaxis Markdown estándar:
 
 ```markdown
 ![Chat del agente respondiendo una pregunta](docs/screenshot-chat.png)
@@ -445,13 +440,13 @@ Hay dos formas prácticas de incluir un video en un README de GitHub
 (GitHub no soporta la etiqueta `<video>` de HTML en los README renderizados):
 
 **Opción A — Subir el video directo a un Issue o comentario de GitHub (recomendada)**
-1. Ve a cualquier Issue de tu repositorio (o crea uno nuevo) o directamente
-   edita este README desde la web de GitHub.
-2. Arrastra el archivo de video (mp4, mov, etc., hasta 100 MB) al cuadro de
-   texto del Issue/editor.
+1. Ir a cualquier Issue del repositorio (o crear uno nuevo), o bien editar
+   este README desde la web de GitHub.
+2. Arrastrar el archivo de video (mp4, mov, etc., hasta 100 MB) al cuadro
+   de texto del Issue/editor.
 3. GitHub lo sube a su CDN y genera automáticamente una URL tipo
    `https://github.com/user-attachments/assets/xxxxxxxx-...`.
-4. Copia esa URL y pégala aquí en el README:
+4. Pegar esa URL en el README:
 
 ```markdown
 https://github.com/user-attachments/assets/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
@@ -461,8 +456,8 @@ GitHub renderiza automáticamente un reproductor de video embebido a partir
 de esa URL cuando está en su propia línea.
 
 **Opción B — Subir el video a YouTube (no listado) y enlazar una miniatura**
-Si el video es más largo o pesado, súbelo a YouTube como "No listado" y
-usa una miniatura clickeable:
+Para videos más largos o pesados, se puede subir a YouTube como "No
+listado" y enlazar una miniatura clickeable:
 
 ```markdown
 [![Demo del proyecto](https://img.youtube.com/vi/TU_VIDEO_ID/0.jpg)](https://www.youtube.com/watch?v=TU_VIDEO_ID)
@@ -481,4 +476,4 @@ https://github.com/user-attachments/assets/PENDIENTE-agregar-video
 
 ---
 
-Proyecto desarrollado como parte del reto **Alura Agente** — programa **ONE (Oracle Next Education) — IA for Tech**.
+Proyecto desarrollado en el marco del reto **Alura Agente**, programa **ONE (Oracle Next Education) — IA for Tech**.
