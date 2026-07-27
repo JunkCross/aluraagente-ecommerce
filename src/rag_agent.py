@@ -45,7 +45,12 @@ RESPUESTA (clara, directa, en español, citando la fuente):"""
 class LunaShopAgent:
     def __init__(self):
         self.embeddings = HuggingFaceEmbeddings(
-            model_name="sentence-transformers/all-MiniLM-L6-v2"
+            model_name="sentence-transformers/all-MiniLM-L6-v2",
+            # Fuerza CPU explícitamente. Sin esto, en entornos CPU-only como
+            # Streamlit Community Cloud, sentence-transformers/torch puede
+            # intentar inicializar el modelo en un "meta device" y fallar con
+            # NotImplementedError al moverlo ("Cannot copy out of meta tensor").
+            model_kwargs={"device": "cpu"},
         )
         if not os.path.isdir(VECTOR_DB_DIR):
             raise FileNotFoundError(

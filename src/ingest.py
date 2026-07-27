@@ -223,7 +223,12 @@ def build_index(chunks: list[Document]):
     otro proceso -el agente ya cargado- todavía tiene abierto)."""
     print(f"\nGenerando embeddings para {len(chunks)} fragmentos...")
     embeddings = HuggingFaceEmbeddings(
-        model_name="sentence-transformers/all-MiniLM-L6-v2"
+        model_name="sentence-transformers/all-MiniLM-L6-v2",
+        # Fuerza CPU explícitamente. Sin esto, en entornos CPU-only como
+        # Streamlit Community Cloud, sentence-transformers/torch puede
+        # intentar inicializar el modelo en un "meta device" y fallar con
+        # NotImplementedError al moverlo ("Cannot copy out of meta tensor").
+        model_kwargs={"device": "cpu"},
     )
 
     vectordb = Chroma.from_documents(
@@ -242,7 +247,10 @@ def build_index(chunks: list[Document]):
 
 
 def _get_embeddings():
-    return HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+    return HuggingFaceEmbeddings(
+        model_name="sentence-transformers/all-MiniLM-L6-v2",
+        model_kwargs={"device": "cpu"},
+    )
 
 
 def _open_vectordb():
