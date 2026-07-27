@@ -1,0 +1,10 @@
+fecha_inicio,fecha_fin,nombre_campana,categoria,descuento_porcentaje,codigo_cupon,canal
+2026-01-05,2026-01-12,Rebajas de enero,Todas las categorias,20,ENERO20,Email y app
+2026-02-10,2026-02-14,San Valentin tech,Audio,15,LOVE15,Redes sociales
+2026-03-01,2026-03-08,Semana del hogar,Hogar,25,HOGAR25,Email y sitio web
+2026-04-15,2026-04-20,Aniversario LunaShop,Todas las categorias,30,LUNA10ANOS,Todos los canales
+2026-05-01,2026-05-10,Dia de las madres,Hogar,18,MAMA18,Redes sociales y app
+2026-06-01,2026-06-07,Regreso a clases,Computo,22,ESCUELA22,Email y sitio web
+2026-07-01,2026-07-07,Vacaciones de verano,Accesorios,15,VERANO15,App
+2026-11-27,2026-11-30,Black Friday,Todas las categorias,35,BLACKLUNA,Todos los canales
+2026-12-01,2026-12-24,Temporada navidena,Todas las categorias,20,NAVIDAD20,Todos los canales
