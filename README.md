@@ -426,17 +426,9 @@ aluraagente-ecommerce/
 
 ### Video de demostración
 
-
-https://github.com/user-attachments/assets/aac09d24-ebe2-46d7-ab84-1532bdc80c72
-
-
 https://github.com/user-attachments/assets/2ed3c25f-9249-4791-ab57-31a97ab971e4
 
-
-
-
-
-
+https://github.com/user-attachments/assets/aac09d24-ebe2-46d7-ab84-1532bdc80c72
 
 <!--
 https://github.com/user-attachments/assets/PENDIENTE-agregar-video
