@@ -128,7 +128,15 @@ class OCIObjectStorage:
         }
 
     def list_files(self):
-        objects = self.client.list_objects(self.namespace, self.bucket, prefix="documents/").data.objects
+        # Por defecto, list_objects() de OCI solo devuelve el campo 'name'.
+        # Hay que pedir explícitamente 'size' y 'timeModified' o vienen
+        # siempre en None (se veían como 0.0 KB en la UI).
+        objects = self.client.list_objects(
+            self.namespace,
+            self.bucket,
+            prefix="documents/",
+            fields="name,size,timeModified",
+        ).data.objects
         files = []
         for obj in objects:
             name = obj.name.split("/", 1)[-1]
@@ -148,8 +156,13 @@ class OCIObjectStorage:
         object_name = f"documents/{filename}"
         self.client.put_object(self.namespace, self.bucket, object_name, content)
         # Reflejamos el cambio localmente para que ingest.py lo recoja de inmediato.
-        with open(os.path.join(DOCUMENTS_DIR, filename), "wb") as f:
+        local_path = os.path.join(DOCUMENTS_DIR, filename)
+        with open(local_path, "wb") as f:
             f.write(content)
+        # app.py usa el valor de retorno para pasarlo a ingest.index_document(),
+        # igual que hace con LocalStorage.save_file(). Sin este return, la
+        # indexación incremental tras un upload falla con TypeError.
+        return local_path
 
     def delete_file(self, filename: str):
         object_name = f"documents/{filename}"
