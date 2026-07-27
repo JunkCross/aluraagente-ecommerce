@@ -71,12 +71,11 @@ def load_storage():
 
 
 def rebuild_index():
-    """Vuelve a correr la ingesta completa tras subir/borrar un documento.
-    Se borra el índice anterior para no dejar embeddings obsoletos de
-    documentos eliminados."""
-    import shutil
-    if os.path.isdir(ingest.VECTOR_DB_DIR):
-        shutil.rmtree(ingest.VECTOR_DB_DIR)
+    """Construye el índice completo desde cero. Solo se usa en la primera
+    carga (cuando chroma_db/ todavía no existe). No debe llamarse tras el
+    arranque: si el agente ya está cargado, su conexión SQLite a
+    chroma.sqlite3 sigue abierta y en Windows no se puede borrar el
+    directorio mientras eso ocurre (WinError 32)."""
     docs = ingest.load_documents()
     chunks = ingest.chunk_documents(docs)
     ingest.build_index(chunks)
@@ -97,6 +96,8 @@ if "index_version" not in st.session_state:
     st.session_state.index_version = 0
 if "last_nonce" not in st.session_state:
     st.session_state.last_nonce = None
+if "action_error" not in st.session_state:
+    st.session_state.action_error = None
 if "index_ready" not in st.session_state:
     # Primera carga: construye el índice si aún no existe.
     if not os.path.isdir(ingest.VECTOR_DB_DIR):
@@ -112,7 +113,9 @@ def documents_payload():
 
 
 def status_payload():
-    return agent.get_status()
+    status = agent.get_status()
+    status["error"] = st.session_state.action_error
+    return status
 
 
 # --- Renderiza el frontend y espera eventos ---
@@ -150,25 +153,36 @@ if event and isinstance(event, dict) and event.get("nonce") != st.session_state.
     elif action == "upload":
         filename = event.get("filename")
         content_b64 = event.get("content_b64")
+        st.session_state.action_error = None
         if filename and content_b64:
             import base64
             try:
                 content = base64.b64decode(content_b64)
-                st.session_state.storage.save_file(filename, content)
+                saved_path = st.session_state.storage.save_file(filename, content)
                 with st.spinner(f"Indexando '{filename}'..."):
-                    rebuild_index()
+                    # Indexación incremental: solo procesa este archivo,
+                    # no borra ni reconstruye el resto del índice.
+                    ingest.index_document(saved_path)
                 st.session_state.index_version += 1
                 load_agent.clear()
             except Exception as e:
-                print(f"[ERROR] Falló la carga de {filename}: {e}")
+                error_msg = f"No se pudo cargar '{filename}': {e}"
+                print(f"[ERROR] {error_msg}")
+                st.session_state.action_error = error_msg
         st.rerun()
 
     elif action == "delete":
         filename = event.get("filename")
+        st.session_state.action_error = None
         if filename:
-            st.session_state.storage.delete_file(filename)
-            with st.spinner(f"Actualizando el índice tras borrar '{filename}'..."):
-                rebuild_index()
-            st.session_state.index_version += 1
-            load_agent.clear()
+            try:
+                st.session_state.storage.delete_file(filename)
+                with st.spinner(f"Actualizando el índice tras borrar '{filename}'..."):
+                    ingest.remove_document(filename)
+                st.session_state.index_version += 1
+                load_agent.clear()
+            except Exception as e:
+                error_msg = f"No se pudo eliminar '{filename}': {e}"
+                print(f"[ERROR] {error_msg}")
+                st.session_state.action_error = error_msg
         st.rerun()

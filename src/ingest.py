@@ -213,7 +213,14 @@ def chunk_documents(docs: list[Document]) -> list[Document]:
 
 
 def build_index(chunks: list[Document]):
-    """Etapa 5: generación de embeddings e indexación vectorial."""
+    """Etapa 5: generación de embeddings e indexación vectorial.
+
+    Construye el índice desde cero. Solo debe usarse en la primera carga
+    (cuando VECTOR_DB_DIR aún no existe). Para altas/bajas de documentos
+    individuales tras el arranque, usar index_document()/remove_document(),
+    que no requieren borrar el directorio completo (evita bloqueos de
+    archivo en Windows, donde SQLite no permite eliminar un .sqlite3 que
+    otro proceso -el agente ya cargado- todavía tiene abierto)."""
     print(f"\nGenerando embeddings para {len(chunks)} fragmentos...")
     embeddings = HuggingFaceEmbeddings(
         model_name="sentence-transformers/all-MiniLM-L6-v2"
@@ -224,11 +231,74 @@ def build_index(chunks: list[Document]):
         embedding=embeddings,
         persist_directory=VECTOR_DB_DIR,
         collection_name="lunashop_docs",
+        # all-MiniLM-L6-v2 esta optimizado para similitud coseno, no L2
+        # (la metrica por defecto de Chroma). Sin esto, similarity_search_
+        # with_relevance_scores() devuelve valores mal calibrados y el
+        # umbral de confianza descarta contenido relevante.
+        collection_metadata={"hnsw:space": "cosine"},
     )
-    # En la nueva versión de Chroma, no se necesita llamar a persist() explícitamente
-    # Los datos se guardan automáticamente
     print(f"Índice vectorial guardado en '{VECTOR_DB_DIR}/'")
     return vectordb
+
+
+def _get_embeddings():
+    return HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+
+
+def _open_vectordb():
+    return Chroma(
+        persist_directory=VECTOR_DB_DIR,
+        embedding_function=_get_embeddings(),
+        collection_name="lunashop_docs",
+        collection_metadata={"hnsw:space": "cosine"},
+    )
+
+
+def remove_document(filename: str):
+    """Elimina del índice todos los fragmentos que pertenezcan a un archivo,
+    identificado por su metadata 'source'. No borra el directorio de Chroma,
+    solo los vectores de ese documento. Seguro de llamar aunque el archivo
+    no tenga fragmentos indexados (no-op)."""
+    vectordb = _open_vectordb()
+    vectordb._collection.delete(where={"source": filename})
+
+
+def index_document(path: str):
+    """Extrae, limpia, fragmenta e indexa un único archivo (identificado por
+    su ruta completa), sin afectar los fragmentos de otros documentos ya
+    indexados. Si el archivo ya tenía fragmentos de una versión anterior
+    (re-subida), primero los elimina para no dejar duplicados ni chunks
+    obsoletos."""
+    ext = os.path.splitext(path)[1].lower()
+    extractor = EXTRACTORS.get(ext)
+    if not extractor:
+        raise ValueError(f"Formato no soportado: {ext}")
+
+    filename = os.path.basename(path)
+    stem = os.path.splitext(filename)[0]
+    category = CATEGORY_MAP.get(stem, "General")
+
+    text = extractor(path)
+    if not text.strip():
+        raise ValueError(f"El documento quedó vacío tras la extracción: {filename}")
+
+    doc = Document(
+        page_content=text,
+        metadata={
+            "source": filename,
+            "categoria": category,
+            "fecha_ingesta": datetime.now().isoformat(),
+            "formato": ext.replace(".", ""),
+        },
+    )
+    chunks = chunk_documents([doc])
+
+    # Si es una re-subida del mismo nombre, primero quitamos los chunks viejos.
+    remove_document(filename)
+
+    vectordb = _open_vectordb()
+    vectordb.add_documents(chunks)
+    return len(chunks)
 
 
 def main():

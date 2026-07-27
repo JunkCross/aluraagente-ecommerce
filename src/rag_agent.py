@@ -56,6 +56,11 @@ class LunaShopAgent:
             persist_directory=VECTOR_DB_DIR,
             embedding_function=self.embeddings,
             collection_name="lunashop_docs",
+            # Debe coincidir con la métrica usada al crear la colección en
+            # ingest.py (cosine, no la L2 por defecto de Chroma) para que
+            # similarity_search_with_relevance_scores() devuelva valores
+            # bien calibrados frente a SIMILARITY_THRESHOLD.
+            collection_metadata={"hnsw:space": "cosine"},
         )
         self.llm = self._load_llm()
 

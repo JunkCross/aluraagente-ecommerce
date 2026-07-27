@@ -56,7 +56,20 @@ function render() {
   renderStatusBadges(currentArgs.status || {});
   renderMessages(currentArgs.history || []);
   renderDocuments(currentArgs.documents || []);
+  renderActionError(currentArgs.status || {});
   setTimeout(setFrameHeight, 30);
+}
+
+// ---- Errores de subir/borrar documentos ----
+
+let lastShownError = null;
+
+function renderActionError(status) {
+  const error = status.error;
+  if (error && error !== lastShownError) {
+    showToast(`⚠️ ${error}`);
+  }
+  lastShownError = error || null;
 }
 
 function escapeHtml(str) {
