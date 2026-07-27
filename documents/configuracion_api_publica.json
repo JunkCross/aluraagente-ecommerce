@@ -1,0 +1,56 @@
+{
+  "documento": "Configuracion de la API publica de LunaShop",
+  "version": "1.4",
+  "ultima_actualizacion": "2026-06-18",
+  "area_responsable": "Datos y Sistemas",
+  "base_url": "https://api.lunashop.example.com/v1",
+  "autenticacion": {
+    "tipo": "OAuth2 Client Credentials",
+    "vigencia_token_minutos": 60,
+    "endpoint_token": "/oauth/token"
+  },
+  "limites_de_uso": {
+    "plan_desarrollador_gratuito": {
+      "solicitudes_por_minuto": 60,
+      "solicitudes_por_dia": 5000
+    },
+    "plan_partner_comercial": {
+      "solicitudes_por_minuto": 600,
+      "solicitudes_por_dia": 200000
+    }
+  },
+  "endpoints_principales": [
+    {
+      "ruta": "/productos",
+      "metodo": "GET",
+      "descripcion": "Lista el catalogo de productos con filtros por categoria y disponibilidad",
+      "requiere_scope": "productos:lectura"
+    },
+    {
+      "ruta": "/pedidos/{id}",
+      "metodo": "GET",
+      "descripcion": "Consulta el estado y detalle de un pedido especifico",
+      "requiere_scope": "pedidos:lectura"
+    },
+    {
+      "ruta": "/pedidos",
+      "metodo": "POST",
+      "descripcion": "Crea un nuevo pedido de forma programatica (uso exclusivo de partners autorizados)",
+      "requiere_scope": "pedidos:escritura"
+    },
+    {
+      "ruta": "/webhooks/estado-envio",
+      "metodo": "POST",
+      "descripcion": "Callback que LunaShop invoca cuando cambia el estado de un envio",
+      "requiere_scope": "webhooks:suscripcion"
+    }
+  ],
+  "politica_de_deprecacion": {
+    "aviso_previo_meses": 6,
+    "canal_de_notificacion": "correo registrado del desarrollador y changelog publico"
+  },
+  "soporte_tecnico": {
+    "contacto": "[email protected]",
+    "tiempo_respuesta_horas_habiles": 24
+  }
+}
