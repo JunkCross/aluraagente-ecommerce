@@ -1,0 +1,28 @@
+# Entorno
+.env
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Índice vectorial e logs (se regeneran con ingest.py)
+chroma_db/
+logs/*.jsonl
+
+# Pruebas y documentos de prueba (no forman parte de la entrega)
+tests/
+test_documents/
+test_queries.py
+test_cohere.py
+pytest.ini
+.env.cohere.example
+
+# Terraform
+terraform/.terraform/
+terraform/*.tfstate
+terraform/*.tfstate.backup
+terraform/.terraform.lock.hcl
+
+# OS / editor
+.DS_Store
+.vscode/
