@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LunaShop — Agente de Soporte Interno</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="app">
+
+  <header class="app-header">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">☾</span>
+      <div class="brand-text">
+        <h1>LunaShop <span class="brand-sub">Agente</span></h1>
+        <p class="brand-tagline">Soporte interno impulsado por IA</p>
+      </div>
+    </div>
+
+    <div class="status-badges" id="statusBadges">
+      <!-- Rellenado por script.js con la info de modelo y base de datos -->
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="chat" id="tabChatBtn">💬 Chat</button>
+    <button class="tab-btn" data-tab="docs" id="tabDocsBtn">📁 Documentos</button>
+  </nav>
+
+  <div class="layout">
+
+    <!-- ================= CHAT ================= -->
+    <main class="tab-panel chat-panel" id="panelChat">
+      <div class="messages" id="messages"></div>
+
+      <form class="composer" id="composer">
+        <input
+          type="text"
+          id="questionInput"
+          placeholder="Escribe tu pregunta…"
+          autocomplete="off"
+          required
+        />
+        <button type="submit" id="sendBtn"><span>Preguntar</span></button>
+      </form>
+    </main>
+
+    <!-- ================= DOCUMENTOS ================= -->
+    <main class="tab-panel docs-panel" id="panelDocs" hidden>
+
+      <section class="upload-zone" id="uploadZone">
+        <input type="file" id="fileInput" hidden
+               accept=".md,.pdf,.docx,.xlsx,.csv,.json,.html,.htm,.pptx" />
+        <div class="upload-inner" id="uploadInner">
+          <span class="upload-icon">⬆</span>
+          <p><strong>Arrastra un archivo aquí</strong> o haz clic para elegirlo</p>
+          <p class="upload-hint">Formatos aceptados: PDF, Word, Excel, PowerPoint, Markdown, CSV, JSON, HTML</p>
+        </div>
+      </section>
+
+      <div class="docs-list-header">
+        <h2>Documentos indexados</h2>
+        <span class="docs-count" id="docsCount">0</span>
+      </div>
+      <ul class="docs-list" id="docsList"></ul>
+
+    </main>
+
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
