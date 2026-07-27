@@ -234,6 +234,8 @@ minutos).
 5. Clic en **"Deploy"**. Streamlit Cloud instala `requirements.txt` y
    levanta `app.py` automáticamente. Cada `git push` a `main` re-despliega
    la app sola.
+6. https://aluraagente-ecommerce-mu7jftmyr37x5tr6ep8top.streamlit.app/
+![Chat Deployed](docs/RAG_DEPLOY.jpg)
 
 > **No se necesita Dockerfile para este camino de deploy** — Streamlit
 > Cloud construye el entorno directamente desde `requirements.txt`.
@@ -414,54 +416,17 @@ aluraagente-ecommerce/
 
 ## 🎥 Evidencia del proyecto (capturas y video)
 
-Esta sección reúne la evidencia visual del proyecto funcionando: capturas
-de pantalla de la interfaz y un video corto de demostración.
-
 ### Capturas de pantalla
 
-1. Crear una carpeta `docs/` en la raíz del repo si no existe.
-2. Guardar ahí las capturas (por ejemplo `docs/screenshot-chat.png`,
-   `docs/screenshot-documentos.png`).
-3. Insertarlas en el README con sintaxis Markdown estándar:
-
-```markdown
-![Chat del agente respondiendo una pregunta](docs/screenshot-chat.png)
-![Gestor de documentos con subida y borrado](docs/screenshot-documentos.png)
-```
-
-<!--
-![Chat del agente respondiendo una pregunta](docs/screenshot-chat.png)
-![Gestor de documentos con subida y borrado](docs/screenshot-documentos.png)
--->
+![Chat Deploy](docs/RAG_DEPLOY.jpg)
+![Chat realizando una pregunta](docs/RAG_RESPONDIENDO.jpg)
+![Bucket de OCI](docs/OCI_BUCKETS.jpg)
+![Bucket de OCI con los archivos subidos](docs/Arachivos_almacenados_en_OCI.jpg)
+![Bucket de OCI con los del sistema](docs/Registro_LOGS.jpg)
 
 ### Video de demostración
 
-Hay dos formas prácticas de incluir un video en un README de GitHub
-(GitHub no soporta la etiqueta `<video>` de HTML en los README renderizados):
 
-**Opción A — Subir el video directo a un Issue o comentario de GitHub (recomendada)**
-1. Ir a cualquier Issue del repositorio (o crear uno nuevo), o bien editar
-   este README desde la web de GitHub.
-2. Arrastrar el archivo de video (mp4, mov, etc., hasta 100 MB) al cuadro
-   de texto del Issue/editor.
-3. GitHub lo sube a su CDN y genera automáticamente una URL tipo
-   `https://github.com/user-attachments/assets/xxxxxxxx-...`.
-4. Pegar esa URL en el README:
-
-```markdown
-https://github.com/user-attachments/assets/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-```
-
-GitHub renderiza automáticamente un reproductor de video embebido a partir
-de esa URL cuando está en su propia línea.
-
-**Opción B — Subir el video a YouTube (no listado) y enlazar una miniatura**
-Para videos más largos o pesados, se puede subir a YouTube como "No
-listado" y enlazar una miniatura clickeable:
-
-```markdown
-[![Demo del proyecto](https://img.youtube.com/vi/TU_VIDEO_ID/0.jpg)](https://www.youtube.com/watch?v=TU_VIDEO_ID)
-```
 
 <!--
 https://github.com/user-attachments/assets/PENDIENTE-agregar-video
