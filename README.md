@@ -10,10 +10,11 @@ ficticia, usando RAG (Retrieval-Augmented Generation).
 > generados con fines de demostración.
 
 > **Nota sobre OCI:** este proyecto despliega en Streamlit Community Cloud
-> y usa OCI Object Storage (capa Always Free, creado manualmente desde la
-> consola — sin Terraform) para el almacenamiento persistente de
-> documentos, cumpliendo así el uso de al menos un servicio de Oracle
-> Cloud Infrastructure.
+> y usa **OCI Object Storage** (capa Always Free, bucket creado
+> manualmente desde la consola — sin Terraform) como almacenamiento
+> persistente de documentos. Es el backend activo por defecto
+> (`STORAGE_BACKEND=oci`), cumpliendo así el uso de al menos un servicio
+> de Oracle Cloud Infrastructure.
 
 ---
 
@@ -28,10 +29,12 @@ ficticia, usando RAG (Retrieval-Augmented Generation).
 - [Cómo ejecutar el proyecto localmente](#-cómo-ejecutar-el-proyecto-localmente)
 - [Despliegue en Streamlit Community Cloud](#-despliegue-en-streamlit-community-cloud)
 - [Almacenamiento de documentos: local o OCI Object Storage](#-almacenamiento-de-documentos-local-o-oci-object-storage)
+- [Migración de documentos existentes a OCI](#-migración-de-documentos-existentes-a-oci)
 - [Registro de conversaciones (logs)](#-registro-de-conversaciones-logs)
 - [Deploy alterno con Docker (opcional/secundario)](#-deploy-alterno-con-docker-opcionalsecundario)
 - [Solución de problemas comunes](#-solución-de-problemas-comunes)
 - [Estructura del repositorio](#-estructura-del-repositorio)
+- [Evidencia del proyecto (capturas y video)](#-evidencia-del-proyecto-capturas-y-video)
 - [Roadmap / mejoras futuras](#-roadmap--mejoras-futuras)
 
 ---
@@ -124,7 +127,9 @@ por el reto**:
 | JSON | `.json` | librería estándar | ✅ Soportado |
 | HTML | `.html` / `.htm` | `beautifulsoup4` | ✅ Soportado |
 
-El repositorio incluye **12 documentos de ejemplo** cubriendo los 7 formatos:
+El repositorio incluye **13 documentos de ejemplo** cubriendo los 7 formatos
+(12 documentos base de LunaShop + 1 PDF adicional usado para probar la
+indexación de archivos más grandes):
 
 | Documento | Formato | Categoría |
 |---|---|---|
@@ -140,6 +145,7 @@ El repositorio incluye **12 documentos de ejemplo** cubriendo los 7 formatos:
 | `historial_promociones.csv` | CSV | Marketing y Comercial |
 | `configuracion_api_publica.json` | JSON | Datos y Sistemas |
 | `ayuda_garantias_soporte.html` | HTML | Atención al Cliente |
+| `NexaRetail_Intelligence_Platform_v1.0.pdf` | PDF | General |
 
 ## 📁 Gestión de documentos desde el frontend
 
@@ -213,7 +219,9 @@ vectorial automáticamente (puede tardar uno o dos minutos).
 1. Sube el repositorio a GitHub (público, como pide el reto).
 2. Entra a [share.streamlit.io](https://share.streamlit.io) e inicia sesión con tu cuenta de GitHub.
 3. Clic en **"New app"** → selecciona el repositorio, la rama `main` y el archivo principal `app.py`.
-4. En **"Advanced settings" → "Secrets"**, pega algo como:
+4. En **"Advanced settings" → "Secrets"**, pega tus credenciales de LLM y
+   de OCI Object Storage (ver la sección [Almacenamiento de documentos](#-almacenamiento-de-documentos-local-o-oci-object-storage)
+   para el bloque completo de `Secrets` con OCI). Como mínimo necesitas:
    ```toml
    LLM_PROVIDER = "cohere"
    COHERE_API_KEY = "tu_api_key_aqui"
@@ -221,7 +229,9 @@ vectorial automáticamente (puede tardar uno o dos minutos).
 
    STORAGE_BACKEND = "local"
    ```
-   (o `STORAGE_BACKEND = "oci"` con tus credenciales de OCI, ver siguiente sección).
+   Si usas `STORAGE_BACKEND = "oci"` (el backend activo en este proyecto),
+   agrega también `OCI_BUCKET_NAME`, `OCI_NAMESPACE`, `OCI_TENANCY_OCID`,
+   `OCI_USER_OCID`, `OCI_FINGERPRINT`, `OCI_REGION` y `OCI_PRIVATE_KEY_CONTENT`.
 5. Clic en **"Deploy"**. Streamlit Cloud instala `requirements.txt` y
    levanta `app.py` automáticamente. Cada `git push` a `main` re-despliega
    la app sola.
@@ -291,6 +301,47 @@ OCI_REGION = "mx-queretaro-1"
 existe `~/.oci/config` lo usa directamente; si no, arma la configuración a
 partir de esas variables de entorno individuales.
 
+**Para Streamlit Community Cloud**, donde no existe un archivo
+`~/.oci/config` en el contenedor, usa la Opción B completa en los
+*Secrets* de la app (Advanced settings → Secrets al crear/editar la app):
+
+```toml
+STORAGE_BACKEND = "oci"
+OCI_BUCKET_NAME = "lunashop-documentos"
+OCI_NAMESPACE = "tu_namespace_aqui"
+OCI_TENANCY_OCID = "ocid1.tenancy.oc1..xxxxx"
+OCI_USER_OCID = "ocid1.user.oc1..xxxxx"
+OCI_FINGERPRINT = "xx:xx:xx:...:xx"
+OCI_REGION = "mx-queretaro-1"
+OCI_PRIVATE_KEY_CONTENT = """-----BEGIN PRIVATE KEY-----
+...
+-----END PRIVATE KEY-----"""
+```
+
+Nota el uso de comillas triples (`"""..."""`) para `OCI_PRIVATE_KEY_CONTENT`
+en formato TOML, necesario porque la llave privada ocupa varias líneas.
+
+## 📦 Migración de documentos existentes a OCI
+
+Si ya tienes documentos en `documents/` (el caso típico al pasar de
+`STORAGE_BACKEND=local` a `oci` por primera vez), usa el script incluido
+`migrate_documents_to_oci.py` para subirlos todos al bucket de una sola
+vez:
+
+```bash
+python migrate_documents_to_oci.py
+```
+
+El script:
+- Se conecta al bucket configurado en `.env` (`OCI_BUCKET_NAME`, `OCI_NAMESPACE`).
+- Sube cada archivo soportado que encuentre en `DOCUMENTS_DIR`.
+- No borra nada, ni local ni en el bucket — es seguro volver a ejecutarlo si se agregan documentos nuevos localmente.
+- Al final, verifica listando el contenido del bucket para confirmar que todo llegó.
+
+Es una migración de una sola vez: una vez que los documentos están en el
+bucket, las subidas y borrados posteriores desde la interfaz ya pasan
+directo por `src/storage.py` sin necesidad de este script.
+
 ## 📊 Registro de conversaciones (logs)
 
 Cada interacción (pregunta, respuesta, fuentes, feedback 👍/👎) se registra
@@ -321,13 +372,26 @@ COHERE_MODEL=command-a-03-2025
 
 **El índice tarda en construirse en cada redeploy**
 Es esperado: Streamlit Cloud tiene sistema de archivos efímero, así que el
-índice de ChromaDB se reconstruye desde cero en cada arranque. Con los 12
+índice de ChromaDB se reconstruye desde cero en cada arranque. Con los 13
 documentos de ejemplo tarda menos de un minuto.
 
 **Subí un documento pero el agente no lo usa**
 Revisa el cuadrito "Base de datos vectorial": debe mostrar más fragmentos
 que antes. Si no cambió, revisa los logs de la app en Streamlit Cloud
 ("Manage app" → "Logs") para ver si la extracción del archivo falló.
+
+**`NotImplementedError: Cannot copy out of meta tensor` al construir el índice**
+Ocurre en entornos CPU-only (como Streamlit Community Cloud) cuando
+`sentence-transformers`/`torch` intenta inicializar el modelo de embeddings
+en un "meta device" antes de moverlo a CPU. El proyecto ya fuerza
+`model_kwargs={"device": "cpu"}` en las tres instancias de
+`HuggingFaceEmbeddings` (`src/ingest.py` x2, `src/rag_agent.py`), así que
+si ves este error revisa que no se haya quitado esa configuración.
+
+**Los documentos aparecen con 0.0 KB en el gestor de documentos (backend OCI)**
+La API de OCI `list_objects()` solo devuelve el campo `name` por defecto;
+hay que pedir explícitamente `size` y `timeModified` con el parámetro
+`fields`. Ya está corregido en `src/storage.py` (`OCIObjectStorage.list_files`).
 
 ## 📁 Estructura del repositorio
 
@@ -343,15 +407,70 @@ aluraagente-ecommerce/
 │   ├── style.css
 │   └── script.js
 ├── app.py                         # Punto de entrada Streamlit: orquesta agente + aloja el frontend
+├── migrate_documents_to_oci.py     # Migración única: sube documents/ local al bucket de OCI
 ├── test_queries.py                # Preguntas de prueba end-to-end
 ├── requirements.txt
 ├── Dockerfile                     # Deploy alterno/secundario (no requerido para Streamlit Cloud)
 ├── docker-compose.yml
 ├── .python-version                 # Pin a Python 3.10
 ├── .env.example
-├── COMMITS.md                     # Guía de commits/ramas paso a paso para subir el proyecto a GitHub
 └── README.md
 ```
+
+## 🎥 Evidencia del proyecto (capturas y video)
+
+Esta sección reúne la evidencia visual del proyecto funcionando: capturas
+de pantalla de la interfaz y un video corto de demostración.
+
+### Capturas de pantalla
+
+1. Crea una carpeta `docs/` en la raíz del repo si no existe.
+2. Guarda ahí tus capturas (por ejemplo `docs/screenshot-chat.png`,
+   `docs/screenshot-documentos.png`).
+3. Insértalas en el README con sintaxis Markdown estándar:
+
+```markdown
+![Chat del agente respondiendo una pregunta](docs/screenshot-chat.png)
+![Gestor de documentos con subida y borrado](docs/screenshot-documentos.png)
+```
+
+<!--
+![Chat del agente respondiendo una pregunta](docs/screenshot-chat.png)
+![Gestor de documentos con subida y borrado](docs/screenshot-documentos.png)
+-->
+
+### Video de demostración
+
+Hay dos formas prácticas de incluir un video en un README de GitHub
+(GitHub no soporta la etiqueta `<video>` de HTML en los README renderizados):
+
+**Opción A — Subir el video directo a un Issue o comentario de GitHub (recomendada)**
+1. Ve a cualquier Issue de tu repositorio (o crea uno nuevo) o directamente
+   edita este README desde la web de GitHub.
+2. Arrastra el archivo de video (mp4, mov, etc., hasta 100 MB) al cuadro de
+   texto del Issue/editor.
+3. GitHub lo sube a su CDN y genera automáticamente una URL tipo
+   `https://github.com/user-attachments/assets/xxxxxxxx-...`.
+4. Copia esa URL y pégala aquí en el README:
+
+```markdown
+https://github.com/user-attachments/assets/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+```
+
+GitHub renderiza automáticamente un reproductor de video embebido a partir
+de esa URL cuando está en su propia línea.
+
+**Opción B — Subir el video a YouTube (no listado) y enlazar una miniatura**
+Si el video es más largo o pesado, súbelo a YouTube como "No listado" y
+usa una miniatura clickeable:
+
+```markdown
+[![Demo del proyecto](https://img.youtube.com/vi/TU_VIDEO_ID/0.jpg)](https://www.youtube.com/watch?v=TU_VIDEO_ID)
+```
+
+<!--
+https://github.com/user-attachments/assets/PENDIENTE-agregar-video
+-->
 
 ## 🔭 Roadmap / mejoras futuras
 

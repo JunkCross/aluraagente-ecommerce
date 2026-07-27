@@ -15,6 +15,7 @@ test_documents/
 test_queries.py
 test_cohere.py
 pytest.ini
+COMMITS.md
 .env.cohere.example
 
 # Terraform
